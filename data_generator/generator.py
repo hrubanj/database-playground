@@ -12,14 +12,6 @@ Faker.seed(FAKER_SEED)
 faker_generator = Faker()
 
 
-def make_timestamp() -> int:
-    return faker_generator.date_time_between_dates(
-        datetime_start=datetime.datetime(2020, 1, 1),
-        datetime_end=datetime.datetime(2024, 12, 31),
-        tzinfo=datetime.UTC,
-    ).timestamp()
-
-
 class User(BaseModel):
     name: str
     address: str
@@ -78,20 +70,6 @@ class Post(BaseModel):
                 "post_id": faker_generator.pyint(max_value=MAX_POST_ID),
                 "title": faker_generator.text(),
                 "content": faker_generator.text(),
-            }
-        )
-
-
-class Uploads(BaseModel):
-    post_id: int
-    file_name: str
-
-    @classmethod
-    def generate(cls) -> Uploads:
-        return cls.parse_obj(
-            {
-                "post_id": faker_generator.pyint(max_value=MAX_POST_ID),
-                "file_name": faker_generator.file_name(),
             }
         )
 
