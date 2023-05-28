@@ -32,6 +32,8 @@ class PostgresDatabase(Database):
     async def upload_to_table(
         self, table_name: str, data: list[tuple], columns: list[str]
     ) -> None:
-        await self._connection.copy_records_to_table(
-            table_name=table_name, records=data
+        table = f'"{table_name}"'
+        await self._connection.executemany(
+            f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['$' + str(i + 1) for i in range(len(columns))])})",
+            data,
         )

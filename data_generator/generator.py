@@ -5,14 +5,22 @@ import datetime
 from faker import Faker
 from pydantic import BaseModel
 
-MAX_USER_ID = 1_000_000
-MAX_POST_ID = 1_000_000
+MAX_USER_ID = 100_000
+MAX_POST_ID = 10_000_000
+MAX_VISIT_ID = 10_000_000
+MAX_COMMENT_ID = 10_000_000
 FAKER_SEED = 43
 Faker.seed(FAKER_SEED)
 faker_generator = Faker()
 
 
-class User(BaseModel):
+class DataGenerator(BaseModel):
+    @classmethod
+    def generate(cls) -> DataGenerator:
+        raise NotImplementedError
+
+
+class User(DataGenerator):
     name: str
     address: str
     email: str
@@ -28,7 +36,7 @@ class User(BaseModel):
         )
 
 
-class Visit(BaseModel):
+class Visit(DataGenerator):
     user_id: int
     site_id: int
     timestamp: datetime.datetime
@@ -52,7 +60,7 @@ class Visit(BaseModel):
         )
 
 
-class Post(BaseModel):
+class Post(DataGenerator):
     user_id: int
     time_created: datetime.datetime
     time_updated: datetime.datetime
@@ -74,7 +82,7 @@ class Post(BaseModel):
         )
 
 
-class Comment(BaseModel):
+class Comment(DataGenerator):
     user_id: int
     time_created: datetime.datetime
     time_updated: datetime.datetime
