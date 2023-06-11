@@ -1,6 +1,6 @@
 create table "user"
 (
-    id    serial primary key,
+    id    int       primary key,
     name  varchar(255) not null,
     address varchar(255) not null,
     email varchar(255) not null
@@ -9,7 +9,7 @@ create table "user"
 
 create table "visit"
 (
-    id         serial primary key,
+    id         int       primary key,
     user_id    int          not null,
     site_id    int          not null,
     timestamp  timestamp    not null,
@@ -21,7 +21,7 @@ create table "visit"
 
 create table "post"
 (
-    id           serial primary key,
+    id           int       primary key,
     user_id      int          not null,
     time_created timestamp    not null,
     time_updated timestamp    not null,
@@ -33,7 +33,8 @@ create table "post"
 
 create table "comment"
 (
-    id              serial primary key,
+    id              int    primary key,
+    user_id         int       not null,
     post_id         int       not null,
     time_created    timestamp not null,
     time_updated    timestamp not null,

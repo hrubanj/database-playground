@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import sys
 from typing import Iterable, TypeVar
 
 from data_generator.database.database_interface import Database
@@ -18,16 +20,21 @@ from data_generator.generator import (
 )
 
 T = TypeVar("T", bound=DataGenerator)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
 def create_batches(
-    data_type: T, total_count: int, batch_size: int = 1000
+    data_type: T, total_count: int, batch_size: int = 10_000
 ) -> Iterable[list[T]]:
-    remaining_count = total_count
-    while remaining_count > 0:
-        batch_count = min(batch_size, remaining_count)
-        remaining_count -= batch_count
-        yield [data_type.generate() for _ in range(batch_count)]
+    current_count = 0
+    while current_count < total_count:
+        batch = []
+        for _ in range(min(total_count - current_count, batch_size)):
+            current_count += 1
+            batch.append(data_type.generate(current_count))
+        yield batch
 
 
 async def fill_database(database: Database) -> None:
@@ -39,9 +46,12 @@ async def fill_database(database: Database) -> None:
         [Comment, MAX_COMMENT_ID],
     ]
     for data_type, total_count in objects:
-        for batch in create_batches(data_type, total_count):
+        logger.info("Processing: %s", data_type)
+        table_name = data_type.get_table_name()
+        await database.truncate_table(table_name)
+        for batch_index, batch in enumerate(create_batches(data_type, total_count)):
             await database.upload_to_table(
-                table_name=data_type.__name__.lower(),
+                table_name=table_name,
                 data=[tuple(obj.dict().values()) for obj in batch],
                 columns=list(data_type.__fields__.keys()),
             )

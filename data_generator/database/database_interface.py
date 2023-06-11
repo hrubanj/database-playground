@@ -12,3 +12,6 @@ class Database(Protocol):
         self, table_name: str, data: list[tuple], columns: list[str]
     ) -> None:
         ...
+
+    async def truncate_table(self, table_name: str) -> None:
+        ...

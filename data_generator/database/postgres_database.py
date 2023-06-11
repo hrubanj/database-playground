@@ -29,11 +29,19 @@ class PostgresDatabase(Database):
         await self._connection.close()
         self._connection = None
 
+    @staticmethod
+    def _quote_table_name(table_name: str) -> str:
+        return f'"{table_name}"'
+
     async def upload_to_table(
         self, table_name: str, data: list[tuple], columns: list[str]
     ) -> None:
-        table = f'"{table_name}"'
+        table = self._quote_table_name(table_name)
         await self._connection.executemany(
             f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(['$' + str(i + 1) for i in range(len(columns))])})",
             data,
         )
+
+    async def truncate_table(self, table_name: str) -> None:
+        table = self._quote_table_name(table_name)
+        await self._connection.execute(f"TRUNCATE TABLE {table}")
