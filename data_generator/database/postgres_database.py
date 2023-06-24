@@ -17,7 +17,7 @@ class PostgresDatabase(Database):
         self._connection: asyncpg.Connection | None = None
 
     async def connect(self) -> None:
-        self._connection = await asyncpg.connect(
+        self._connection = await asyncpg.create_pool(
             user=self.user,
             password=self.password,
             database=self.database,

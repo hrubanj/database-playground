@@ -37,6 +37,18 @@ def create_batches(
         yield batch
 
 
+async def fill_table(database: Database, table: DataGenerator, max_id: int) -> None:
+    logger.info("Processing: %s", table)
+    table_name = table.get_table_name()
+    await database.truncate_table(table_name)
+    for batch_index, batch in enumerate(create_batches(table, max_id)):
+        await database.upload_to_table(
+            table_name=table_name,
+            data=[tuple(obj.dict().values()) for obj in batch],
+            columns=list(table.__fields__.keys()),
+        )
+
+
 async def fill_database(database: Database) -> None:
     await database.connect()
     objects = [
@@ -45,29 +57,11 @@ async def fill_database(database: Database) -> None:
         [Post, MAX_POST_ID],
         [Comment, MAX_COMMENT_ID],
     ]
-    for data_type, total_count in objects:
-        logger.info("Processing: %s", data_type)
-        table_name = data_type.get_table_name()
-        await database.truncate_table(table_name)
-        for batch_index, batch in enumerate(create_batches(data_type, total_count)):
-            await database.upload_to_table(
-                table_name=table_name,
-                data=[tuple(obj.dict().values()) for obj in batch],
-                columns=list(data_type.__fields__.keys()),
-            )
-
-
-async def main() -> None:
-    database = PostgresDatabase(
-        user="postgres",
-        password="postgres",
-        database="performancetesting",
-        host="localhost",
-        port=5433,
-    )
-
-    await fill_database(database)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        tasks = [
+            asyncio.create_task(fill_table(database, table, max_id))
+            for table, max_id in objects
+        ]
+        await asyncio.gather(*tasks)
+    finally:
+        await database.disconnect()

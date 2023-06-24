@@ -23,8 +23,12 @@ class DuckDBDatabase(Database):
     async def upload_to_table(
         self, table_name: str, data: list[tuple], columns: list[str]
     ) -> None:
-        with tempfile.TemporaryFile() as tmp:
-            dict_writer = csv.DictWriter(tmp, fieldnames=columns)
-            dict_writer.writeheader()
-            dict_writer.writerows([dict(zip(columns, row)) for row in data])
-            self._database.execute(f"INSERT INTO {table_name} SELECT * FROM {tmp}")
+        quoted_name = f'"{table_name}"'
+        with tempfile.NamedTemporaryFile() as tmp:
+            with open(tmp.name, "w") as tmpfile:
+                dict_writer = csv.DictWriter(tmpfile, fieldnames=columns)
+                dict_writer.writeheader()
+                dict_writer.writerows([dict(zip(columns, row)) for row in data])
+                self._database.execute(
+                    f"INSERT INTO {quoted_name} SELECT * FROM read_csv_auto('{tmp.name}');"
+                )
