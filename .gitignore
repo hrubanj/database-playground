@@ -161,4 +161,6 @@ cython_debug/
 .idea
 
 duckdbdata.db
+.DS_Storeduckdbdata.db.wal
+duckdbdata.db.wal
 .DS_Store

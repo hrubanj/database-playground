@@ -24,11 +24,17 @@ class DuckDBDatabase(Database):
         self, table_name: str, data: list[tuple], columns: list[str]
     ) -> None:
         quoted_name = f'"{table_name}"'
+        columns_string = ", ".join(f'"{column}"' for column in columns)
         with tempfile.NamedTemporaryFile() as tmp:
             with open(tmp.name, "w") as tmpfile:
                 dict_writer = csv.DictWriter(tmpfile, fieldnames=columns)
                 dict_writer.writeheader()
                 dict_writer.writerows([dict(zip(columns, row)) for row in data])
                 self._database.execute(
-                    f"INSERT INTO {quoted_name} SELECT * FROM read_csv_auto('{tmp.name}');"
+                    f"INSERT INTO {quoted_name} ({columns_string}) SELECT {columns_string} "
+                    f"FROM read_csv_auto('{tmp.name}');"
                 )
+
+    async def truncate_table(self, table_name: str) -> None:
+        table = f'"{table_name}"'
+        self._database.execute(f"TRUNCATE TABLE {table}")
