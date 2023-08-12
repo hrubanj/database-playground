@@ -6,7 +6,6 @@ import sys
 from typing import Iterable, TypeVar
 
 from data_generator.database.database_interface import Database
-from data_generator.database.postgres_database import PostgresDatabase
 from data_generator.generator import (
     MAX_COMMENT_ID,
     MAX_POST_ID,
